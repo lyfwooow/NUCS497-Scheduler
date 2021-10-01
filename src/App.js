@@ -33,13 +33,50 @@ const Banner = props => (
   <h1>{props.title}</h1>
 )
 
-const CourseList = ({ courses }) => (
-  <div className="course-list">
-  { Object.values(courses).map(course => <Course key={course.id} course={ course } />) }
-  </div>
-);
+const CourseList = ({ courses }) => {
+  //we need the term state in both the celector and the list of courses
+  //So this is the state(line 39)
+  const [term, setTerm] = useState('Fall');
+
+  //filter the courses by term 
+  const termCourses = Object.values(courses).filter(course => term === getCourseTerm(course));
+  
+  return (
+    <>
+      <TermSelector term={term} setTerm={setTerm}/>
+      <div className="course-list">
+      { termCourses.map(course => <Course key={course.id} course={ course } />) }
+      </div>
+    </>
+  );
+};
+//JSX syntax only allows one component to be returned
+//The empty element syntax <> is a way to return several components as one
+// without creating an unnecessary HTML element, such as a div
 
 const terms = { F: 'Fall', W: 'Winter', S: 'Spring'};
+
+const TermButton = ({term, setTerm, checked}) => (
+  <>
+    <input type="radio" id={term} className="btn-check" checked={checked} autoComplete="off"
+      onChange={() => setTerm(term)} />
+    <label class="btn btn-success m-1 p-2" htmlFor={term}>
+    { term }
+    </label>
+  </>
+);
+
+//The term selector is a row of buttons
+const TermSelector = ({term, setTerm}) => (
+  //In bootstrap, CSS class "btn-group" can be used to make a row of butons
+  <div className="btn-group">
+  { 
+    Object.values(terms).map(value => (
+      <TermButton key={value} term={value} setTerm={setTerm} checked={value === term} />
+    ))
+  }
+  </div>
+);
 
 const getCourseTerm = course => (
   terms[course.id.charAt(0)]
