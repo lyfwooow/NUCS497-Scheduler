@@ -1,5 +1,6 @@
 import './App.css';
-import React from 'react';
+// import React from 'react';
+import React, { useState, useEffect } from 'react'; //useState() is called a Hook, because it hooks into the internals of the React system
 
 const schedule = {
   "title": "CS Courses for 2018-2019",
@@ -57,10 +58,35 @@ const Course = ({ course }) => (
   </div>
 );
 
-const App = () =>  (
-  <div className="container">
-    <Banner title={ schedule.title } />
-    <CourseList courses={ schedule.courses } />
-  </div>
-);
+
+const App = () => {
+  const [schedule, setSchedule] = useState();
+  const url = 'https://courses.cs.northwestern.edu/394/data/cs-courses.php';
+
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      const response = await fetch(url);
+      if (!response.ok) throw response;
+      const json = await response.json();
+      setSchedule(json);
+    }
+    fetchSchedule();
+  }, []);
+// React re-renders very frequentlyly, but we don't want to do a fatch everytime the component is updated
+// That could get our app kicked off a network service for voilating service limits
+// So pass an array of those variables as the second argument.
+//      -if no argument, React runs the function on all updates
+//      -if empty list is given, React runs the function only when the component is first added
+
+
+
+  if (!schedule) return <h1>Loading schedule...</h1>;
+
+  return (
+    <div className="container">
+      <Banner title={ schedule.title } />
+      <CourseList courses={ schedule.courses } />
+    </div>
+  );
+};
 export default App;
