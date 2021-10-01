@@ -1,12 +1,12 @@
+//import React from 'react';
 import './App.css';
-// import React from 'react';
-import React, { useState, useEffect } from 'react'; //useState() is called a Hook, because it hooks into the internals of the React system
+import React, { useState, useEffect } from 'react';
 
-const schedule = {
-  "title": "CS Courses for 2018-2019",
+/*const schedule = {
+  title: "CS Courses for 2021-2022",
   "courses": {
     "F101" : {
-
+    
       "id" : "F101",
       "meets" : "MWF 11:00-11:50",
       "title" : "Computer Science: Concepts, Philosophy, and Connections"
@@ -27,48 +27,58 @@ const schedule = {
       "title" : "Tech & Human Interaction"
     }
   }
-};
+};*/
 
-const Banner = props => (
-  <h1>{props.title}</h1>
-)
+const App = () =>  {
+const [schedule, setSchedule] = useState();
+const url = 'https://courses.cs.northwestern.edu/394/data/cs-courses.php';
 
-const CourseList = ({ courses }) => {
-  //we need the term state in both the celector and the list of courses
-  //So this is the state(line 39)
-  const [term, setTerm] = useState('Fall');
+useEffect(() => {
+  const fetchSchedule = async () => {
+    const response = await fetch(url);
+    if (!response.ok) throw response;
+    const json = await response.json();
+    setSchedule(addScheduleTimes(json));
+  }
+  fetchSchedule();
+}, []);
 
-  //filter the courses by term 
-  const termCourses = Object.values(courses).filter(course => term === getCourseTerm(course));
-  
+if (!schedule) return <h1>Loading schedule...</h1>;
   return (
-    <>
-      <TermSelector term={term} setTerm={setTerm}/>
-      <div className="course-list">
-      { termCourses.map(course => <Course key={course.id} course={ course } />) }
-      </div>
-    </>
+  <div className="container">
+    <Banner title={ schedule.title } />
+    <CourseList courses={ schedule.courses } />
+  </div>
   );
 };
-//JSX syntax only allows one component to be returned
-//The empty element syntax <> is a way to return several components as one
-// without creating an unnecessary HTML element, such as a div
 
-const terms = { F: 'Fall', W: 'Winter', S: 'Spring'};
-
-const TermButton = ({term, setTerm, checked}) => (
-  <>
-    <input type="radio" id={term} className="btn-check" checked={checked} autoComplete="off"
-      onChange={() => setTerm(term)} />
-    <label class="btn btn-success m-1 p-2" htmlFor={term}>
-    { term }
-    </label>
-  </>
+const Banner = ({ title }) => (
+  <h1 className="text-center">{ title }</h1>
 );
 
-//The term selector is a row of buttons
+const CourseList = ({ courses }) => {
+
+  const [term, setTerm] = useState('Fall');
+  const [selected, setSelected] = useState([]);
+  const termCourses = Object.values(courses).filter(course => term === getCourseTerm(course));
+
+  return (
+  <>
+    <TermSelector term={term} setTerm={setTerm} />
+
+    <div className="course-list">
+      { termCourses.map(course => <Course key={course.id} course={ course } 
+                                  selected={selected} setSelected={ setSelected } />) }
+    </div>
+  </>
+  );
+}
+;
 const TermSelector = ({term, setTerm}) => (
-  //In bootstrap, CSS class "btn-group" can be used to make a row of butons
+  //JSX syntax only allows one component to be returned
+//The empty element syntax <> is a way to return several components as one
+// without creating an unnecessary HTML element, such as a div
+  //
   <div className="btn-group">
   { 
     Object.values(terms).map(value => (
@@ -77,7 +87,17 @@ const TermSelector = ({term, setTerm}) => (
   }
   </div>
 );
+const TermButton = ({term, setTerm, checked}) => (
+  <>
+    <input type="radio" id={term} className="btn-check" autoComplete="off"
+     checked={checked} onChange={() => setTerm(term)} />
+    <label class="btn btn-primary m-1 p-2" htmlFor={term}>
+    { term }
+    </label>
+  </>
+);
 
+const terms = { F: 'Fall', W: 'Winter', S: 'Spring'};
 const getCourseTerm = course => (
   terms[course.id.charAt(0)]
 );
@@ -86,44 +106,76 @@ const getCourseNumber = course => (
   course.id.slice(1, 4)
 );
 
-const Course = ({ course }) => (
-  <div className="card m-1 p-2">
+const toggle = (x, lst) => (
+  lst.includes(x) ? lst.filter(y => y !== x) : [x, ...lst]
+);
+
+const Course = ({ course, selected, setSelected }) => {
+  const isSelected = selected.includes(course);
+  const isDisabled = !isSelected && hasConflict(course, selected);
+  const style = {
+    backgroundColor: isDisabled? 'lightgrey' : isSelected ? 'lightblue' : 'white' };
+  return (
+  <div className="card m-1 p-1" style = {style}
+    onClick={isDisabled ? null : () => setSelected(toggle(course, selected))}>
     <div className="card-body">
       <div className="card-title">{ getCourseTerm(course) } CS { getCourseNumber(course) }</div>
       <div className="card-text">{ course.title }</div>
+      <div className="card-text">{ course.meets }</div>
     </div>
   </div>
 );
-
-
-const App = () => {
-  const [schedule, setSchedule] = useState();
-  const url = 'https://courses.cs.northwestern.edu/394/data/cs-courses.php';
-
-  useEffect(() => {
-    const fetchSchedule = async () => {
-      const response = await fetch(url);
-      if (!response.ok) throw response;
-      const json = await response.json();
-      setSchedule(json);
-    }
-    fetchSchedule();
-  }, []);
-// React re-renders very frequentlyly, but we don't want to do a fatch everytime the component is updated
-// That could get our app kicked off a network service for voilating service limits
-// So pass an array of those variables as the second argument.
-//      -if no argument, React runs the function on all updates
-//      -if empty list is given, React runs the function only when the component is first added
-
-
-
-  if (!schedule) return <h1>Loading schedule...</h1>;
-
-  return (
-    <div className="container">
-      <Banner title={ schedule.title } />
-      <CourseList courses={ schedule.courses } />
-    </div>
-  );
 };
+
+//check conflict of classes
+const hasConflict = (course, selected) => (
+  selected.some(selection => courseConflict(course, selection))
+);
+
+const meetsPat = /^ *((?:M|Tu|W|Th|F)+) +(\d\d?):(\d\d) *[ -] *(\d\d?):(\d\d) *$/;
+
+const timeParts = meets => {
+  const [match, days, hh1, mm1, hh2, mm2] = meetsPat.exec(meets) || [];
+  return !match ? {} : {
+    days,
+    hours: {
+      start: hh1 * 60 + mm1 * 1,
+      end: hh2 * 60 + mm2 * 1
+    }
+  };
+};
+
+const mapValues = (fn, obj) => (
+  Object.fromEntries(Object.entries(obj).map(([key, value]) => [key, fn(value)]))
+);
+
+const addCourseTimes = course => ({
+  ...course,
+  ...timeParts(course.meets)
+});
+
+const addScheduleTimes = schedule => ({
+  title: schedule.title,
+  courses: mapValues(addCourseTimes, schedule.courses)
+});
+
+const days = ['M', 'Tu', 'W', 'Th', 'F'];
+
+const daysOverlap = (days1, days2) => ( 
+  days.some(day => days1.includes(day) && days2.includes(day))
+);
+
+const hoursOverlap = (hours1, hours2) => (
+  Math.max(hours1.start, hours2.start) < Math.min(hours1.end, hours2.end)
+);
+
+const timeConflict = (course1, course2) => (
+  daysOverlap(course1.days, course2.days) && hoursOverlap(course1.hours, course2.hours)
+);
+
+const courseConflict = (course1, course2) => (
+  getCourseTerm(course1) === getCourseTerm(course2)
+  && timeConflict(course1, course2)
+);
+
 export default App;
