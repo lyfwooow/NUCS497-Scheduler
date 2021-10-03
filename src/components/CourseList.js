@@ -49,21 +49,22 @@ const SignOuButton = () => (
     Sign Out
   </button>
 );
-
+  
 const TermSelector = ({term, setTerm}) => {
-  const [user] = useUserState();
-  return (
-    <div className="btn-toolbar justify-content-between">
-      <div className="btn-group">
-      { 
-        Object.values(terms).map(
-          value => <TermButton key={value} term={value} setTerm={setTerm} checked={value === term} />
-        )
-      }
+    const [user] = useUserState();
+    return (
+      <div className="btn-toolbar justify-content-between">
+        <div className="btn-group">
+        { 
+          Object.values(terms).map(
+            value => <TermButton key={value} term={value} setTerm={setTerm} checked={value === term} />
+          )
+        }
+        </div>
+        { user ? <SignOuButton /> : <SignInButton /> }
       </div>
-      { user ? <SignOuButton /> : <SignInButton /> }
-    </div>
-  );
+    );
 };
+
 
 export default CourseList;

@@ -7,7 +7,7 @@ import { getDatabase, onValue, ref, set } from 'firebase/database';
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyDGNlppNNiaY8fjUFBUor6JWnn074qqk-o",
-  authDomain: "nucs497-scheduler.firebaseapp.com",
+  auFhDomain: "nucs497-scheduler.firebaseapp.com",
   databaseURL: "https://nucs497-scheduler-default-rtdb.firebaseio.com",
   projectId: "nucs497-scheduler",
   storageBucket: "nucs497-scheduler.appspot.com",
